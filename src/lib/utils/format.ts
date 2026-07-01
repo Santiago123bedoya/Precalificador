@@ -1,0 +1,22 @@
+// src/lib/utils/format.ts
+
+export function formatCOP(amount: number): string {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export function formatDate(date: string | Date): string {
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+export function formatPercentage(value: number): string {
+  return `${Math.round(value)}%`;
+}
