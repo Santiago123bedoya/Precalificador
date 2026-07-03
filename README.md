@@ -71,16 +71,35 @@ Sistema de precalificación crediticia para cooperativas, impulsado por intelige
 - Python 3.11+
 - npm
 
-### 1. Frontend
+### 1. Clonar e instalar dependencias
 
 ```bash
+git clone <repo-url>
+cd Precalificador\ Crediticio
 npm install
+```
+
+### 2. Configurar variables de entorno
+
+Crear `.env.local` en la raíz del proyecto con las variables de la sección correspondiente.
+
+Si usas el servicio ML, crear también `ml-service/.env.local`:
+
+```env
+DEEPSEEK_API_KEY=sk-tu-api-key
+DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat/completions
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+### 3. Iniciar el frontend
+
+```bash
 npm run dev
 ```
 
 Abrir [http://localhost:3000](http://localhost:3000)
 
-### 2. Servicio ML (para scoring real + DeepSeek)
+### 4. Servicio ML (opcional, para scoring real + DeepSeek)
 
 ```bash
 cd ml-service
@@ -90,7 +109,15 @@ python app.py
 
 El servicio corre en `http://localhost:8000`. Si no está disponible, el sistema usa evaluación simulada.
 
-### 3. Usuarios demo
+### 5. Desarrollo con localtunnel (opcional)
+
+Para probar webhooks de Palenca desde internet:
+
+```powershell
+.\start-dev.ps1
+```
+
+### 6. Usuarios demo
 
 | Email | Rol |
 |---|---|
