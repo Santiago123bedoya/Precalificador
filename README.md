@@ -113,6 +113,12 @@ El servicio corre en `http://localhost:8000`. Si no está disponible, el sistema
 
 Para probar webhooks de Palenca desde internet:
 
+```bash
+npm run dev:tunnel
+```
+
+o directamente:
+
 ```powershell
 .\start-dev.ps1
 ```
