@@ -24,27 +24,41 @@ export default function PerfilPage() {
   const [successProfile, setSuccessProfile] = useState<RadarInput | null>(null);
 
   useEffect(() => {
-    if (!USE_MOCK || !user) return;
+    if (!user) return;
 
     setSuccessProfile(calcularPerfilExito());
 
-    const solicitudes: { asociadoId: string; $id: string }[] = JSON.parse(
-      localStorage.getItem(MOCK_SOLICITUDES_KEY) || "[]"
-    );
-    const userSolicitud = solicitudes.find((s) => s.asociadoId === user.$id);
-    if (!userSolicitud) return;
+    if (USE_MOCK) {
+      const solicitudes: { asociadoId: string; $id: string }[] = JSON.parse(
+        localStorage.getItem(MOCK_SOLICITUDES_KEY) || "[]"
+      );
+      const userSolicitud = solicitudes.find((s) => s.asociadoId === user.$id);
+      if (!userSolicitud) return;
 
-    const evals: Evaluacion[] = JSON.parse(
-      localStorage.getItem(MOCK_EVALUACIONES_KEY) || "[]"
-    );
-    const found = evals.find((e) => e.solicitudId === userSolicitud.$id);
-    if (found) {
+      const evals: Evaluacion[] = JSON.parse(
+        localStorage.getItem(MOCK_EVALUACIONES_KEY) || "[]"
+      );
+      const found = evals.find((e) => e.solicitudId === userSolicitud.$id);
+      if (found) {
+        setRadarData({
+          consistenciaIngresos: found.consistenciaIngresos,
+          responsabilidadPagos: found.responsabilidadPagos,
+          compromisoCooperativo: found.compromisoCooperativo,
+          perfilEndeudamiento: found.perfilEndeudamiento,
+          capacidadAhorro: found.capacidadAhorro,
+        });
+      }
+      return;
+    }
+
+    // Non-mock: load radar from user profile (saved during solicitud)
+    if (user.consistenciaIngresos || user.responsabilidadPagos) {
       setRadarData({
-        consistenciaIngresos: found.consistenciaIngresos,
-        responsabilidadPagos: found.responsabilidadPagos,
-        compromisoCooperativo: found.compromisoCooperativo,
-        perfilEndeudamiento: found.perfilEndeudamiento,
-        capacidadAhorro: found.capacidadAhorro,
+        consistenciaIngresos: user.consistenciaIngresos || 50,
+        responsabilidadPagos: user.responsabilidadPagos || 50,
+        compromisoCooperativo: user.compromisoCooperativo || 50,
+        perfilEndeudamiento: user.perfilEndeudamiento || 50,
+        capacidadAhorro: user.capacidadAhorro || 50,
       });
     }
   }, [user]);

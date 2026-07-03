@@ -43,6 +43,9 @@ export interface Evaluacion {
   explicacionResumen: string;
   montoRecomendado?: number;
   recomendaciones?: string[];
+  radarIdeal?: RadarData;
+  fortalezas?: string[];
+  scorePerfil?: number;
 }
 
 export interface RadarData {
@@ -74,4 +77,37 @@ export interface Consentimiento {
     datosCooperativa: boolean;
     datosSocioConductuales: boolean;
   };
+}
+
+export type DimensionEtica = "solidaridad" | "participacionDemocratica" | "responsabilidadSocial" | "transparencia" | "compromisoComunitario";
+
+export interface RespuestaCuestionario {
+  preguntaId: string;
+  valor: number;
+  dimension: DimensionEtica;
+}
+
+export interface CuestionarioSocioConductual {
+  $id: string;
+  asociadoId: string;
+  fecha: string;
+  respuestas: RespuestaCuestionario[];
+  puntajeTotal: number;
+  dimensiones: Record<DimensionEtica, number>;
+  interpretacion: string;
+  perfil: "lider" | "comprometido" | "participativo" | "basico" | "observador";
+}
+
+export interface ServicioPublico {
+  $id: string;
+  asociadoId: string;
+  tipo: string;
+  contrato: string;
+  cedula: string;
+  direccion: string;
+  mesFactura: string;
+  montoPagado: number;
+  pagoCompleto: boolean;
+  fechaPago: string;
+  fechaRegistro: string;
 }

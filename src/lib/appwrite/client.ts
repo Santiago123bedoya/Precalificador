@@ -1,9 +1,10 @@
 // src/lib/appwrite/client.ts
 import { Client, Account, Databases, Functions } from "appwrite";
 
-const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!;
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+const API_KEY = process.env.APPWRITE_API_KEY!;
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
 
 export const client = new Client()
   .setEndpoint(ENDPOINT)
@@ -21,5 +22,34 @@ export const DB = {
     EVALUACIONES: "evaluaciones",
     INGRESOS_DIGITALES: "ingresos_digitales",
     CONSENTIMIENTOS: "consentimientos",
+    CONFIGURACION: "configuracion",
+    SERVICIOS_PUBLICOS: "servicios_publicos",
+    CUESTIONARIOS: "cuestionarios_socio_conductuales",
   },
 } as const;
+
+export async function appwriteFetch(
+  path: string,
+  method: string = "GET",
+  body?: any
+) {
+  const url = `${ENDPOINT}${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Appwrite-Key": API_KEY,
+    "X-Appwrite-Project": PROJECT_ID,
+  };
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Appwrite error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}

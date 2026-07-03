@@ -1,6 +1,6 @@
 // Permite cambiar entre Appwrite real y modo simulado
 // Cambia a true para probar sin conexión a Appwrite
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 
 export const MOCK_CREDENTIALS = {
   admin: { email: "admin@demo.com", password: "cualquier123" },

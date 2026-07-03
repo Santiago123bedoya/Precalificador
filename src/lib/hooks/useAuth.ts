@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { account, databases, DB } from "@/lib/appwrite/client";
+import { Query } from "appwrite";
 import type { Asociado, UserRole } from "@/lib/types";
 import { USE_MOCK, MOCK_CREDENTIALS } from "@/lib/mock";
 import { seedMockData } from "@/lib/seed-mock";
@@ -78,9 +79,9 @@ export function useAuth() {
         if (session?.$id) {
           let result;
           try {
-            result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [`authId=${session.$id}`]);
+            result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [Query.equal("authId", session.$id)]);
           } catch {
-            result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [`email=${session.email}`]);
+            result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [Query.equal("email", session.email)]);
           }
           if (result.documents.length > 0) {
             const userData = result.documents[0] as unknown as Asociado;
@@ -116,16 +117,16 @@ export function useAuth() {
     }
 
     try {
-      const hasSession = await account.get().then(() => true).catch(() => false);
-      if (hasSession) await account.deleteSession("current");
+      try { await account.deleteSessions(); } catch {}
+      await new Promise((r) => setTimeout(r, 300));
       await account.createEmailPasswordSession(email, password);
       const session = await account.get();
 
       let result;
       try {
-        result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [`authId=${session.$id}`]);
+        result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [Query.equal("authId", session.$id)]);
       } catch {
-        result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [`email=${email}`]);
+        result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [Query.equal("email", email)]);
       }
       if (result.documents.length === 0) {
         throw new Error("Usuario no encontrado en la base de datos.");
@@ -154,6 +155,7 @@ export function useAuth() {
     if (USE_MOCK) {
       return createMockUser(email);
     }
+    try { await account.deleteSessions(); } catch {}
     const session = await account.create('unique()', email, password);
     await databases.createDocument(DB.id, DB.collections.ASOCIADOS, "unique()", {
       authId: session.$id, nombre, email, telefono: "",
@@ -162,8 +164,9 @@ export function useAuth() {
       consistenciaIngresos: 50, responsabilidadPagos: 50,
       compromisoCooperativo: 50, perfilEndeudamiento: 50, capacidadAhorro: 50,
     });
+    await new Promise((r) => setTimeout(r, 300));
     await account.createEmailPasswordSession(email, password);
-    const result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [`authId=${session.$id}`]);
+    const result = await databases.listDocuments(DB.id, DB.collections.ASOCIADOS, [Query.equal("authId", session.$id)]);
     const userData = result.documents[0] as unknown as Asociado;
     cacheRef.current = { data: userData, time: Date.now() };
     setUser(userData);

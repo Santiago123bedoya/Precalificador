@@ -32,20 +32,50 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    if (!USE_MOCK) return;
-    const stored = localStorage.getItem("ia-coop-mock-solicitudes");
-    if (!stored) return;
-    const list: any[] = JSON.parse(stored);
-    const filtered = isAsociado
-      ? list.filter((s) => s.asociadoId === user?.$id)
-      : list;
-    setStats({
-      total: filtered.length,
-      pendiente: filtered.filter((s) => s.estado === "pendiente").length,
-      precalificado: filtered.filter((s) => s.estado === "precalificado").length,
-      aprobado: filtered.filter((s) => s.estado === "aprobado").length,
-      rechazado: filtered.filter((s) => s.estado === "rechazado").length,
-    });
+    if (!user) return;
+
+    async function loadStats() {
+      if (USE_MOCK) {
+        const stored = localStorage.getItem("ia-coop-mock-solicitudes");
+        if (!stored) return;
+        const list: any[] = JSON.parse(stored);
+        const filtered = isAsociado
+          ? list.filter((s) => s.asociadoId === user?.$id)
+          : list;
+        setStats({
+          total: filtered.length,
+          pendiente: filtered.filter((s) => s.estado === "pendiente").length,
+          precalificado: filtered.filter((s) => s.estado === "precalificado").length,
+          aprobado: filtered.filter((s) => s.estado === "aprobado").length,
+          rechazado: filtered.filter((s) => s.estado === "rechazado").length,
+        });
+        return;
+      }
+
+      try {
+        let list: any[];
+        if (isAsociado && user?.$id) {
+          const res = await fetch(`/api/solicitudes?asociadoId=${user.$id}`);
+          const data = await res.json();
+          list = data.documents || [];
+        } else {
+          const { databases, DB } = await import("@/lib/appwrite/client");
+          const result = await databases.listDocuments(DB.id, DB.collections.SOLICITUDES);
+          list = result.documents;
+        }
+        setStats({
+          total: list.length,
+          pendiente: list.filter((s) => s.estado === "pendiente").length,
+          precalificado: list.filter((s) => s.estado === "precalificado").length,
+          aprobado: list.filter((s) => s.estado === "aprobado").length,
+          rechazado: list.filter((s) => s.estado === "rechazado").length,
+        });
+      } catch (err) {
+        console.error("Error cargando stats:", err);
+      }
+    }
+
+    loadStats();
   }, [user, isAsociado]);
 
   const statCards = [

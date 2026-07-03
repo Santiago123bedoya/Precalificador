@@ -63,13 +63,13 @@ export function evaluateRadar(input: RadarInput, montoSolicitado: number): Evalu
   let decision: EvaluationResult["decision"];
   let factor: number;
 
-  if (puntajeRiesgo < 0.25) {
+  if (puntajeRiesgo < 0.35) {
     decision = "aprobado";
     factor = 1.0;
-  } else if (puntajeRiesgo < 0.45) {
+  } else if (puntajeRiesgo < 0.55) {
     decision = "precalificado";
     factor = 0.8;
-  } else if (puntajeRiesgo < 0.65) {
+  } else if (puntajeRiesgo < 0.75) {
     decision = "no_precalificado";
     factor = 0.4;
   } else {

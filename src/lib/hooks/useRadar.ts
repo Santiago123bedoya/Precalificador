@@ -1,6 +1,6 @@
 // src/lib/hooks/useRadar.ts
 import { useEffect, useState } from "react";
-import { getEvaluacion } from "@/lib/appwrite/db";
+import { getEvaluacionBySolicitud } from "@/lib/appwrite/db";
 import type { Evaluacion, RadarData } from "@/lib/types";
 
 export function useRadar(evaluacionId: string) {
@@ -16,8 +16,12 @@ export function useRadar(evaluacionId: string) {
 
     const fetchRadar = async () => {
       try {
-        const evaluacion = await getEvaluacion(evaluacionId);
-        setData(evaluacion);
+        const evaluacion = await getEvaluacionBySolicitud(evaluacionId);
+        if (evaluacion) {
+          setData(evaluacion);
+        } else {
+          setError("Evaluación no encontrada para esta solicitud");
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar el radar");
       } finally {

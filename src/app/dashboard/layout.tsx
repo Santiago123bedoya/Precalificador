@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
   LayoutDashboard,
   FilePlus,
   Files,
-  UserPlus,
   Users,
   BarChart3,
   Settings,
@@ -18,13 +17,18 @@ import {
   ChevronRight,
   Menu,
   Building2,
+  ClipboardList,
+  Receipt,
+  Brain,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "gestor", "asociado"] },
   { href: "/dashboard/solicitud/nueva", label: "Nueva Solicitud", icon: FilePlus, roles: ["admin", "gestor", "asociado"] },
+  { href: "/dashboard/mis-solicitudes", label: "Mis Solicitudes", icon: ClipboardList, roles: ["asociado"] },
+  { href: "/dashboard/cuestionario", label: "Cuestionario Ético", icon: Brain, roles: ["asociado", "admin"] },
+  { href: "/dashboard/mis-servicios", label: "Servicios Públicos", icon: Receipt, roles: ["asociado", "admin"] },
   { href: "/dashboard/admin/solicitudes", label: "Todas las Solicitudes", icon: Files, roles: ["admin", "gestor"] },
-  { href: "/registro", label: "Crear Usuario", icon: UserPlus, roles: ["admin"] },
   { href: "/dashboard/admin/usuarios", label: "Usuarios", icon: Users, roles: ["admin"] },
   { href: "/dashboard/admin/reportes", label: "Reportes", icon: BarChart3, roles: ["admin"] },
   { href: "/dashboard/admin/configuracion", label: "Configuración", icon: Settings, roles: ["admin"] },
@@ -34,12 +38,18 @@ const NAV_ITEMS = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return null;
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   const userRole = user?.rol || "asociado";
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(userRole));
@@ -123,11 +133,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="flex items-center gap-2">
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Salir</span>
+                <span className="hidden sm:inline">Cerrar Sesión</span>
               </button>
             </div>
           </header>

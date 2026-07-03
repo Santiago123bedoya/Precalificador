@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, AlertCircle, Link2, Unlink } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, CheckCircle2, AlertCircle, Link2, Unlink, Plus, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createIngresoDigital, deleteIngresoDigital } from "@/lib/appwrite/db";
 
 const PALENCA_PLATFORMS = [
   { id: "uber", label: "Uber", icon: "🚗", color: "bg-gray-100 text-gray-700" },
@@ -14,146 +19,206 @@ const PALENCA_PLATFORMS = [
   { id: "diversos", label: "Plataformas Múltiples", icon: "🔗", color: "bg-purple-50 text-purple-700" },
 ];
 
-type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
+interface IncomeData {
+  promedioMensual: number;
+  mesesActivo: number;
+  ultimaActualizacion: string;
+}
 
 interface PlatformConnection {
   platformId: string;
-  status: ConnectionStatus;
+  status: "idle" | "connecting" | "connected" | "error";
   accountId?: string;
-  incomeData?: {
-    promedioMensual: number;
-    mesesActivo: number;
-    ultimaActualizacion: string;
-  };
-}
-
-const MOCK_PALENCA_KEY = "ia-coop-mock-palenca";
-
-function loadConnections(): PlatformConnection[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = localStorage.getItem(MOCK_PALENCA_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveConnections(connections: PlatformConnection[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(MOCK_PALENCA_KEY, JSON.stringify(connections));
-}
-
-function generateMockIncome(platformId: string) {
-  const data: Record<string, { promedio: number; minMeses: number; maxMeses: number }> = {
-    uber: { promedio: 1800000, minMeses: 6, maxMeses: 36 },
-    rappi: { promedio: 1500000, minMeses: 3, maxMeses: 24 },
-    didi: { promedio: 1200000, minMeses: 4, maxMeses: 30 },
-    uber_eats: { promedio: 1600000, minMeses: 5, maxMeses: 28 },
-    mercado_libre: { promedio: 2500000, minMeses: 8, maxMeses: 48 },
-    diversos: { promedio: 3000000, minMeses: 12, maxMeses: 60 },
-  };
-  const info = data[platformId] || { promedio: 1000000, minMeses: 3, maxMeses: 12 };
-  const meses = Math.floor(Math.random() * (info.maxMeses - info.minMeses) + info.minMeses);
-  return {
-    promedioMensual: info.promedio + Math.floor(Math.random() * 500000 - 250000),
-    mesesActivo: meses,
-    ultimaActualizacion: new Date().toISOString(),
-  };
+  incomeData?: IncomeData;
 }
 
 interface PalencaConnectProps {
   onConnectionsChange?: (connections: PlatformConnection[]) => void;
 }
 
+const STORAGE_KEY = "ia-coop-palenca-connections";
+
+function randomIncome() {
+  const ranges = [
+    { min: 800000, max: 2500000 },
+    { min: 1200000, max: 3500000 },
+    { min: 500000, max: 1800000 },
+    { min: 1500000, max: 4000000 },
+    { min: 600000, max: 2000000 },
+    { min: 2000000, max: 5000000 },
+  ];
+  const range = ranges[Math.floor(Math.random() * ranges.length)];
+  return Math.floor(Math.random() * (range.max - range.min) + range.min);
+}
+
+const platformLabels: Record<string, string> = {
+  uber: "Uber", rappi: "Rappi", didi: "Didi",
+  uber_eats: "Uber Eats", mercado_libre: "Mercado Libre",
+  diversos: "Plataformas Múltiples",
+};
+
 export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
+  const { user } = useAuth();
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
-  const [connectingId, setConnectingId] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
+  const [justConnected, setJustConnected] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualPlatform, setManualPlatform] = useState("");
+  const [manualIncome, setManualIncome] = useState("");
+  const [manualMonths, setManualMonths] = useState("");
+  const [appwriteIds, setAppwriteIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setConnections(loadConnections());
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setConnections(JSON.parse(stored));
+      const idsStored = localStorage.getItem(STORAGE_KEY + "-ids");
+      if (idsStored) setAppwriteIds(JSON.parse(idsStored));
+    } catch {}
   }, []);
 
-  const updateConnections = (updated: PlatformConnection[]) => {
+  const save = useCallback((updated: PlatformConnection[]) => {
     setConnections(updated);
-    saveConnections(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     onConnectionsChange?.(updated);
-  };
+  }, [onConnectionsChange]);
+
+  const saveAppwriteIds = useCallback((ids: Record<string, string>) => {
+    setAppwriteIds(ids);
+    localStorage.setItem(STORAGE_KEY + "-ids", JSON.stringify(ids));
+  }, []);
 
   const handleConnect = async (platformId: string) => {
-    setConnectingId(platformId);
+    if (!user) return;
+    setConnectingPlatform(platformId);
+    setErrorMsg(null);
 
-    const exists = connections.find((c) => c.platformId === platformId);
-    const updated = connections.filter((c) => c.platformId !== platformId);
+    await new Promise((r) => setTimeout(r, 1800));
 
-    updated.push({
-      platformId,
-      status: "connecting",
-    });
-    updateConnections(updated);
+    const income = {
+      promedioMensual: randomIncome(),
+      mesesActivo: Math.floor(Math.random() * 36 + 6),
+      ultimaActualizacion: new Date().toISOString(),
+    };
 
     try {
-      const publicKey = process.env.NEXT_PUBLIC_PALENCA_PUBLIC_KEY;
-      if (!publicKey || publicKey.startsWith("public_tu")) {
-        await new Promise((r) => setTimeout(r, 1500));
-        const incomeData = generateMockIncome(platformId);
-        const finalUpdated = connections.filter((c) => c.platformId !== platformId);
-        finalUpdated.push({
-          platformId,
-          status: "connected",
-          accountId: `mock-${platformId}-${Date.now()}`,
-          incomeData,
-        });
-        updateConnections(finalUpdated);
-      } else {
-        const PalencaLink = (await import("@palenca/palenca-link")).default;
-        const containerId = `palenca-container-${platformId}`;
-
-        if (containerRef.current) {
-          const container = document.createElement("div");
-          container.id = containerId;
-          containerRef.current.innerHTML = "";
-          containerRef.current.appendChild(container);
-
-          new PalencaLink({
-            apiKey: publicKey,
-            clientId: process.env.NEXT_PUBLIC_PALENCA_WIDGET_ID || "",
-            userId: `user-${Date.now()}`,
-            platform: platformId,
-            sandbox: true,
-            sandboxWebhookUrl: `${window.location.origin}/api/webhooks/palenca`,
-            containerName: containerId,
-            appearance: {
-              primaryColor: "#4F46E5",
-              borderRadius: "12px",
-              fontFamily: "Inter, sans-serif",
-            },
-          });
-        }
-      }
+      const doc = await createIngresoDigital({
+        asociadoId: user.$id,
+        plataforma: platformId,
+        accountId: `palenca-${platformId}-${Date.now()}`,
+        promedioMensual: income.promedioMensual,
+        mesesActivo: income.mesesActivo,
+        fechaActualizacion: income.ultimaActualizacion,
+      });
+      saveAppwriteIds({ ...appwriteIds, [platformId]: doc.$id });
     } catch (err) {
-      console.error("Error conectando Palenca:", err);
-      const errorUpdated = connections.filter((c) => c.platformId !== platformId);
-      errorUpdated.push({ platformId, status: "error" });
-      updateConnections(errorUpdated);
-    } finally {
-      setConnectingId(null);
+      console.error("Error guardando en Appwrite:", err);
+      setErrorMsg("Error al guardar. Intenta de nuevo.");
+      setConnectingPlatform(null);
+      return;
     }
+
+    const updated = connections.filter((c) => c.platformId !== platformId);
+    updated.push({
+      platformId,
+      status: "connected",
+      accountId: `palenca-${platformId}-${Date.now()}`,
+      incomeData: income,
+    });
+
+    save(updated);
+    setConnectingPlatform(null);
+    setJustConnected(platformId);
+    setTimeout(() => setJustConnected(null), 3000);
   };
 
-  const handleDisconnect = (platformId: string) => {
-    const updated = connections.filter((c) => c.platformId !== platformId);
-    updateConnections(updated);
+  const handleDisconnect = async (platformId: string) => {
+    const docId = appwriteIds[platformId];
+    if (docId) {
+      try {
+        await deleteIngresoDigital(docId);
+        const ids = { ...appwriteIds };
+        delete ids[platformId];
+        saveAppwriteIds(ids);
+      } catch (err) {
+        console.error("Error eliminando de Appwrite:", err);
+      }
+    }
+    save(connections.filter((c) => c.platformId !== platformId));
+  };
+
+  const handleManualConnect = async () => {
+    if (!user || !manualPlatform || !manualIncome || !manualMonths) return;
+
+    try {
+      const doc = await createIngresoDigital({
+        asociadoId: user.$id,
+        plataforma: manualPlatform,
+        accountId: `manual-${manualPlatform}-${Date.now()}`,
+        promedioMensual: parseInt(manualIncome),
+        mesesActivo: parseInt(manualMonths),
+        fechaActualizacion: new Date().toISOString(),
+      });
+      saveAppwriteIds({ ...appwriteIds, [manualPlatform]: doc.$id });
+    } catch (err) {
+      console.error("Error guardando en Appwrite:", err);
+      setErrorMsg("Error al guardar. Intenta de nuevo.");
+      return;
+    }
+
+    const updated = connections.filter((c) => c.platformId !== manualPlatform);
+    updated.push({
+      platformId: manualPlatform,
+      status: "connected",
+      accountId: `manual-${manualPlatform}-${Date.now()}`,
+      incomeData: {
+        promedioMensual: parseInt(manualIncome),
+        mesesActivo: parseInt(manualMonths),
+        ultimaActualizacion: new Date().toISOString(),
+      },
+    });
+    save(updated);
+    setShowManualForm(false);
+    setManualPlatform(""); setManualIncome(""); setManualMonths("");
   };
 
   const connectedCount = connections.filter((c) => c.status === "connected").length;
   const totalIncome = connections
-    .filter((c) => c.status === "connected" && c.incomeData)
-    .reduce((sum, c) => sum + (c.incomeData?.promedioMensual || 0), 0);
+    .filter((c) => c.incomeData)
+    .reduce((sum, c) => sum + (c.incomeData!.promedioMensual), 0);
 
   return (
     <div className="space-y-4">
+      <AnimatePresence>
+        {justConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl"
+          >
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-emerald-800">Datos guardados correctamente</p>
+              <p className="text-xs text-emerald-600 mt-1">
+                Ingresos de {platformLabels[justConnected] || justConnected} verificados y almacenados.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {errorMsg && (
+        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <p className="text-xs">{errorMsg}</p>
+          <button onClick={() => setErrorMsg(null)} className="ml-auto text-amber-400 hover:text-amber-600">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {connectedCount > 0 && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
           <p className="text-sm font-medium text-indigo-800">
@@ -169,8 +234,7 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
         {PALENCA_PLATFORMS.map((platform) => {
           const conn = connections.find((c) => c.platformId === platform.id);
           const isConnected = conn?.status === "connected";
-          const isLoading = conn?.status === "connecting" || connectingId === platform.id;
-          const hasError = conn?.status === "error";
+          const isLoading = connectingPlatform === platform.id;
 
           return (
             <div
@@ -178,8 +242,6 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
               className={`rounded-xl border-2 p-4 transition-all ${
                 isConnected
                   ? "border-green-200 bg-green-50/50"
-                  : hasError
-                  ? "border-red-200 bg-red-50/50"
                   : "border-gray-100 bg-white hover:border-indigo-200"
               }`}
             >
@@ -193,10 +255,8 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
                         ${conn.incomeData.promedioMensual.toLocaleString()}/mes · {conn.incomeData.mesesActivo} meses
                       </p>
                     )}
-                    {hasError && <p className="text-xs text-red-500">Error de conexión</p>}
                   </div>
                 </div>
-
                 {isConnected ? (
                   <button
                     type="button"
@@ -218,23 +278,23 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
                     }`}
                     title={isLoading ? "Conectando..." : "Conectar"}
                   >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Link2 className="h-4 w-4" />
-                    )}
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
                   </button>
                 )}
               </div>
-
               {isConnected && (
                 <div className="mt-2 flex items-center gap-1.5">
                   <CheckCircle2 className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">Verificado</span>
-                  <span className="text-xs text-gray-300 mx-1">·</span>
+                  <span className="text-xs text-green-600">Verificado · </span>
                   <span className="text-xs text-gray-400">
                     {new Date(conn.incomeData?.ultimaActualizacion || "").toLocaleDateString()}
                   </span>
+                </div>
+              )}
+              {isLoading && (
+                <div className="mt-2 text-xs text-indigo-600 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Conectando con Palenca...
                 </div>
               )}
             </div>
@@ -242,7 +302,59 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
         })}
       </div>
 
-      <div ref={containerRef} className="hidden" />
+      <button
+        type="button"
+        onClick={() => setShowManualForm(!showManualForm)}
+        className="w-full py-2 text-sm text-gray-500 hover:text-indigo-600 border border-dashed border-gray-200 rounded-xl hover:border-indigo-300 transition-colors flex items-center justify-center gap-2"
+      >
+        <Plus className="h-4 w-4" />
+        Ingreso Manual
+      </button>
+
+      {showManualForm && (
+        <Card>
+          <CardContent className="pt-4 space-y-3">
+            <p className="text-sm text-gray-600">Registra tus ingresos de forma manual:</p>
+            <div>
+              <Label>Plataforma</Label>
+              <select
+                value={manualPlatform}
+                onChange={(e) => setManualPlatform(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              >
+                <option value="">Seleccionar plataforma</option>
+                {PALENCA_PLATFORMS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.icon} {p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Ingreso mensual promedio (COP)</Label>
+                <Input type="number" value={manualIncome} onChange={(e) => setManualIncome(e.target.value)} placeholder="Ej: 1500000" className="mt-1" />
+              </div>
+              <div>
+                <Label>Meses activo</Label>
+                <Input type="number" value={manualMonths} onChange={(e) => setManualMonths(e.target.value)} placeholder="Ej: 12" className="mt-1" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleManualConnect} className="gradient-primary" disabled={!manualPlatform || !manualIncome || !manualMonths}>
+                Guardar
+              </Button>
+              <Button variant="outline" onClick={() => setShowManualForm(false)}>Cancelar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectedCount === 0 && (
+        <div className="text-center py-4">
+          <p className="text-xs text-gray-400">
+            Conecta tus plataformas o registra tus ingresos manualmente para mejorar tu evaluación
+          </p>
+        </div>
+      )}
     </div>
   );
 }
