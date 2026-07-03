@@ -1,22 +1,25 @@
 # IA-COOP — Precalificador Crediticio Ético Inteligente
 
-Sistema de precalificación crediticia para cooperativas, impulsado por inteligencia artificial explicable (XAI). Evalúa solicitudes de crédito usando un modelo ML basado en 5 dimensiones del perfil del asociado, con conectividad opcional a plataformas de ingresos digitales vía Palenca.
+Sistema de precalificación crediticia para cooperativas, impulsado por inteligencia artificial explicable (XAI) vía DeepSeek. Evalúa solicitudes de crédito usando un modelo ML basado en 5 dimensiones del perfil del asociado, con validación de ingresos digitales, servicios públicos y perfil socio-conductual.
 
 ---
 
 ## Arquitectura
 
 ```
-┌─────────────────────┐     ┌──────────────────────┐
-│   Next.js 14 App    │────▶│  Python ML Service   │
-│  (Frontend + API)   │◀────│  (FastAPI + sklearn) │
-└─────────────────────┘     └──────────────────────┘
-         │                           │
-         ▼                           ▼
-┌─────────────────────┐     ┌──────────────────────┐
-│   Appwrite (opcional)│    │   Palenca API         │
-│  (Auth + DB cloud)  │    │  (Ingresos digitales) │
-└─────────────────────┘     └──────────────────────┘
+┌─────────────────────┐     ┌──────────────────────┐     ┌────────────────┐
+│   Next.js 14 App    │────▶│  Python ML Service   │────▶│  DeepSeek API  │
+│  (Frontend + API)   │◀────│  (FastAPI + sklearn) │     │   (XAI real)   │
+└─────────────────────┘     └──────────────────────┘     └────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────┐
+│              Appwrite (self-hosted)              │
+│  Auth ─ DB ─ Collections:                       │
+│  asociados, solicitudes_credito, evaluaciones,  │
+│  ingresos_digitales, servicios_publicos,         │
+│  cuestionarios_socio_conductuales, configuracion │
+└─────────────────────────────────────────────────┘
 ```
 
 ### Componentes
@@ -25,9 +28,9 @@ Sistema de precalificación crediticia para cooperativas, impulsado por intelige
 |---|---|---|
 | **Frontend** | Next.js 14, Tailwind CSS, shadcn/ui | Interfaz de usuario responsive |
 | **API** | Next.js API Routes | Endpoints REST para evaluación y webhooks |
-| **ML Service** | FastAPI + scikit-learn (RandomForest) | Scoring crediticio y explicaciones |
+| **ML Service** | FastAPI + scikit-learn (GradientBoosting) | Scoring crediticio con explicaciones DeepSeek |
 | **Auth** | Appwrite + Mock Mode | Autenticación de usuarios por roles |
-| **Ingresos** | Palenca API | Conexión a plataformas digitales (Uber, Rappi, etc.) |
+| **XAI** | DeepSeek Chat API | Explicaciones personalizadas en español |
 
 ---
 
@@ -35,9 +38,9 @@ Sistema de precalificación crediticia para cooperativas, impulsado por intelige
 
 | Rol | Acceso |
 |---|---|
-| **Admin** | Dashboard completo, usuarios, config, reportes, todas las solicitudes |
-| **Gestor** | Dashboard, solicitudes, aprobar/rechazar, detalle con evaluación |
-| **Asociado** | Dashboard, nueva solicitud, perfil con radar |
+| **Admin** | Dashboard completo, usuarios, config, reportes, todas las solicitudes, ver reportes éticos |
+| **Gestor** | Dashboard, solicitudes, aprobar/rechazar, detalle con evaluación y perfil ético |
+| **Asociado** | Dashboard, nueva solicitud, perfil con radar, servicios públicos, cuestionario ético |
 
 ---
 
@@ -47,18 +50,17 @@ Sistema de precalificación crediticia para cooperativas, impulsado por intelige
 - **Next.js 14** (App Router)
 - **TypeScript**
 - **Tailwind CSS** + shadcn/ui
-- **Framer Motion** (animaciones)
-- **Recharts** (gráficos)
+- **Recharts** (radar chart)
 - **Lucide React** (iconos)
 
 ### Machine Learning
 - **FastAPI** (servicio REST)
-- **scikit-learn** (RandomForestClassifier)
-- **NumPy / Pandas**
+- **scikit-learn** (GradientBoosting)
+- **NumPy**
+- **DeepSeek API** (explicaciones XAI)
 
-### Integraciones
-- **Palenca** — conexión a plataformas de ingresos
-- **Appwrite** — autenticación y base de datos (opcional, con mock mode)
+### Backend
+- **Appwrite 1.x** (self-hosted) — Auth + NoSQL Database
 
 ---
 
@@ -78,7 +80,7 @@ npm run dev
 
 Abrir [http://localhost:3000](http://localhost:3000)
 
-### 2. Servicio ML (opcional, para scoring real)
+### 2. Servicio ML (para scoring real + DeepSeek)
 
 ```bash
 cd ml-service
@@ -102,15 +104,16 @@ Cualquier contraseña funciona en modo demo.
 
 ## Variables de entorno
 
-Crear `.env.local` en la raíz (ver `.env.example`):
+Crear `.env.local` en la raíz:
 
 | Variable | Descripción |
 |---|---|
 | `NEXT_PUBLIC_APPWRITE_ENDPOINT` | Endpoint de Appwrite |
 | `NEXT_PUBLIC_APPWRITE_PROJECT_ID` | ID del proyecto Appwrite |
-| `NEXT_PUBLIC_PALENCA_PUBLIC_KEY` | API key pública de Palenca |
-| `NEXT_PUBLIC_PALENCA_WIDGET_ID` | ID del widget Palenca |
-| `DEEPSEEK_API_KEY` | API key DeepSeek para explicaciones |
+| `NEXT_PUBLIC_APPWRITE_DATABASE_ID` | ID de la base de datos Appwrite |
+| `APPWRITE_API_KEY` | API key server-side de Appwrite |
+| `DEEPSEEK_API_KEY` | API key DeepSeek para explicaciones XAI |
+| `ML_SERVICE_URL` | URL del servicio ML (`http://localhost:8000`) |
 
 ---
 
@@ -120,8 +123,8 @@ El proyecto funciona completamente en modo offline activando `USE_MOCK = true` e
 
 - Autenticación simulada con usuarios demo
 - Datos persistidos en localStorage
-- Evaluación simulada con el algoritmo incorporado
-- Conexiones Palenca simuladas con datos de prueba
+- Evaluación simulada con algoritmo incorporado
+- Todas las colecciones simuladas (servicios, ingresos, cuestionarios)
 
 ---
 
@@ -139,10 +142,26 @@ El proyecto funciona completamente en modo offline activando `USE_MOCK = true` e
 
 ### Resultados
 
-- **Aprobado** — riesgo bajo, crédito recomendado
-- **Precalificado** — riesgo moderado, requiere revisión
-- **No precalificado** — riesgo elevado
-- **Rechazado** — riesgo crítico
+- **Aprobado** — riesgo bajo (< 0.35), crédito recomendado
+- **Precalificado** — riesgo moderado (0.35-0.55), requiere revisión
+- **No precalificado** — riesgo elevado (0.55-0.75)
+- **Rechazado** — riesgo crítico (>= 0.75)
+
+---
+
+## Módulos del asociado
+
+### 📋 Solicitud de crédito
+Formulario multi-paso con captura de datos financieros, selección de servicios públicos (hasta 3), conexión a plataformas digitales, y consentimiento informado.
+
+### 💡 Servicios Públicos
+Registro de facturas de servicios (agua, luz, gas, internet, teléfono, TV) para fortalecer el perfil crediticio con historial de pagos.
+
+### 🧠 Cuestionario Ético
+Evaluación gamificada del perfil socio-conductual del asociado en 5 dimensiones cooperativas: participación democrática, compromiso comunitario, solidaridad, responsabilidad social y transparencia. Genera un perfil (Líder → Observador) visible para el admin en cada solicitud.
+
+### 📊 Radar Decisorio
+Visualización radar de las 5 dimensiones con simulación interactiva y perfil ideal recomendado por la IA.
 
 ---
 
@@ -150,31 +169,34 @@ El proyecto funciona completamente en modo offline activando `USE_MOCK = true` e
 
 ```
 ├── src/
-│   ├── app/                  # Next.js App Router
+│   ├── app/
 │   │   ├── (auth)/           # Login / Registro
-│   │   ├── api/              # API Routes
-│   │   └── dashboard/        # Dashboard protegido
+│   │   ├── api/              # API Routes (evaluate, palenca, solicitudes, admin)
+│   │   └── dashboard/
+│   │       ├── solicitud/    # Nueva solicitud y detalle con evaluación
+│   │       ├── mis-solicitudes/  # Listado del asociado
+│   │       ├── mis-servicios/    # Servicios públicos
+│   │       ├── cuestionario/     # Cuestionario socio-conductual
+│   │       ├── perfil/           # Perfil con radar
+│   │       └── admin/            # Admin: solicitudes, usuarios, config, reportes
 │   ├── components/
-│   │   ├── forms/            # Formularios de solicitud
-│   │   ├── palenca/          # Widget de conexión Palenca
+│   │   ├── forms/            # SolicitudForm, ConsentimientoForm
+│   │   ├── cuestionario/     # Cuestionario socio-conductual
+│   │   ├── servicios/        # Servicios públicos
+│   │   ├── palenca/          # Conexión Palenca
 │   │   ├── radar/            # Radar chart y simulación
-│   │   ├── shared/           # Route guards
-│   │   ├── ui/               # shadcn/ui primitives
-│   │   └── xai/              # Explicabilidad
+│   │   ├── xai/              # Explicación DeepSeek
+│   │   └── ui/               # shadcn/ui primitives
 │   └── lib/
-│       ├── appwrite/         # Client y helpers de DB
-│       ├── hooks/            # Custom hooks (auth, radar, solicitud)
-│       └── types/            # TypeScript types
-├── ml-service/               # Servicio ML en Python
-│   ├── app.py                # API FastAPI
+│       ├── appwrite/         # Client, DB helpers, collections
+│       ├── hooks/            # useAuth, useRadar
+│       └── types/            # TypeScript interfaces
+├── ml-service/
+│   ├── app.py                # API FastAPI + DeepSeek
+│   ├── train.py              # Entrenamiento del modelo
 │   ├── model.pkl             # Modelo entrenado
-│   ├── Dockerfile            # Para despliegue
 │   └── requirements.txt
-├── funciones/                # Appwrite Functions (Python)
-│   └── evaluacion_credito/
-│       ├── main.py
-│       └── requirements.txt
-└── requirements.txt          # Python raíz
+└── start-dev.ps1             # Script desarrollo con localtunnel
 ```
 
 ---

@@ -22,3 +22,5 @@ Thumbs.db
 *.zip
 __pycache__/
 *.pyc
+
+tsconfig.tsbuildinfo
