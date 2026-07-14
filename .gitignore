@@ -24,3 +24,9 @@ __pycache__/
 *.pyc
 
 tsconfig.tsbuildinfo
+
+# vercel
+.vercel/
+
+# turbo
+.turbo/
