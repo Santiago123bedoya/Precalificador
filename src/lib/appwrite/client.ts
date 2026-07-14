@@ -1,18 +1,15 @@
 import { Client, Account, Databases, Functions } from "appwrite";
 
-function envOrThrow(name: string): string {
-  const val = process.env[name];
-  if (!val) {
-    if (typeof window !== "undefined") return "";
-    throw new Error(`Falta variable de entorno: ${name}`);
-  }
-  return val;
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "";
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "";
+
+function getApiKey(): string {
+  if (typeof window !== "undefined") return "";
+  return process.env.APPWRITE_API_KEY || "";
 }
 
-const PROJECT_ID = envOrThrow("NEXT_PUBLIC_APPWRITE_PROJECT_ID");
-const DATABASE_ID = envOrThrow("NEXT_PUBLIC_APPWRITE_DATABASE_ID");
-const API_KEY = envOrThrow("APPWRITE_API_KEY");
-const ENDPOINT = envOrThrow("NEXT_PUBLIC_APPWRITE_ENDPOINT");
+const API_KEY = getApiKey();
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "";
 
 export const client = new Client()
   .setEndpoint(ENDPOINT)
