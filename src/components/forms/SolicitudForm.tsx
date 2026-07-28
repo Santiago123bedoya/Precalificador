@@ -36,6 +36,7 @@ import { RadarChart } from "@/components/radar/RadarChart";
 import { calcularPerfilExito } from "@/lib/mock-evaluate";
 import { CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Link2, Shield, Receipt, X } from "lucide-react";
 import { formatCOP } from "@/lib/utils/format";
+import { FormattedCurrencyInput } from "@/components/ui/FormattedCurrencyInput";
 
 // ============================================
 // ESQUEMA DE VALIDACIÓN CON ZOD
@@ -615,16 +616,12 @@ export default function SolicitudForm() {
                     <Label htmlFor="monto" className="text-sm font-semibold">
                       Monto solicitado (COP)
                     </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-3 text-gray-400">$</span>
-                      <Input
-                        id="monto"
-                        type="number"
-                        placeholder="5.000.000"
-                        className="pl-7"
-                        {...register("monto")}
-                      />
-                    </div>
+                    <FormattedCurrencyInput
+                      id="monto"
+                      value={watch("monto") || ""}
+                      onChange={(raw) => setValue("monto", raw)}
+                      placeholder="5.000.000"
+                    />
                     {errors.monto && (
                       <p className="text-sm text-red-500 mt-1">{errors.monto.message}</p>
                     )}
@@ -730,16 +727,12 @@ export default function SolicitudForm() {
                     <Label htmlFor="ingresoMensual" className="text-sm font-semibold">
                       Ingreso mensual aproximado (COP)
                     </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-3 text-gray-400">$</span>
-                      <Input
-                        id="ingresoMensual"
-                        type="number"
-                        placeholder="2.000.000"
-                        className="pl-7"
-                        {...register("ingresoMensual")}
-                      />
-                    </div>
+                    <FormattedCurrencyInput
+                      id="ingresoMensual"
+                      value={watch("ingresoMensual") || ""}
+                      onChange={(raw) => setValue("ingresoMensual", raw)}
+                      placeholder="2.000.000"
+                    />
                     {errors.ingresoMensual && (
                       <p className="text-sm text-red-500 mt-1">{errors.ingresoMensual.message}</p>
                     )}
@@ -750,16 +743,12 @@ export default function SolicitudForm() {
                     <Label htmlFor="gastosFijos" className="text-sm font-semibold">
                       Gastos fijos mensuales (COP)
                     </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-3 text-gray-400">$</span>
-                      <Input
-                        id="gastosFijos"
-                        type="number"
-                        placeholder="1.200.000"
-                        className="pl-7"
-                        {...register("gastosFijos")}
-                      />
-                    </div>
+                    <FormattedCurrencyInput
+                      id="gastosFijos"
+                      value={watch("gastosFijos") || ""}
+                      onChange={(raw) => setValue("gastosFijos", raw)}
+                      placeholder="1.200.000"
+                    />
                     <p className="text-xs text-gray-400 mt-1">Arriendo, servicios, alimentación, transporte</p>
                     {errors.gastosFijos && (
                       <p className="text-sm text-red-500 mt-1">{errors.gastosFijos.message}</p>
@@ -814,16 +803,12 @@ export default function SolicitudForm() {
                             <Label htmlFor="montoDeudas" className="text-sm font-semibold">
                               Monto total de deudas (COP)
                             </Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-3 text-gray-400">$</span>
-                              <Input
-                                id="montoDeudas"
-                                type="number"
-                                placeholder="500.000"
-                                className="pl-7"
-                                {...register("montoDeudas")}
-                              />
-                            </div>
+                            <FormattedCurrencyInput
+                              id="montoDeudas"
+                              value={watch("montoDeudas") || ""}
+                              onChange={(raw) => setValue("montoDeudas", raw)}
+                              placeholder="500.000"
+                            />
                           </div>
                         </motion.div>
                       )}
@@ -865,16 +850,12 @@ export default function SolicitudForm() {
                             <Label htmlFor="montoAhorro" className="text-sm font-semibold">
                               Monto de ahorro mensual (COP)
                             </Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-3 text-gray-400">$</span>
-                              <Input
-                                id="montoAhorro"
-                                type="number"
-                                placeholder="200.000"
-                                className="pl-7"
-                                {...register("montoAhorro")}
-                              />
-                            </div>
+                            <FormattedCurrencyInput
+                              id="montoAhorro"
+                              value={watch("montoAhorro") || ""}
+                              onChange={(raw) => setValue("montoAhorro", raw)}
+                              placeholder="200.000"
+                            />
                           </div>
                         </motion.div>
                       )}
