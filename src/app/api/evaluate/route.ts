@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { formatCOP, formatNumber } from "@/lib/utils/format";
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1/chat/completions";
@@ -101,7 +102,7 @@ function generarRecomendaciones(radar: RadarInput, montoRecomendado: number, pla
   if (capacidadAhorro < 40) recs.push("Tu capacidad de ahorro es baja. Inicia un plan de ahorro programado aunque sea pequeño.");
   else if (capacidadAhorro < 60) recs.push("Establece un porcentaje fijo de ahorro mensual. Esto mejora tu perfil significativamente.");
 
-  if (montoRecomendado > 10000000) recs.push(`Para un monto de $${montoRecomendado.toLocaleString()}, necesitas un perfil financiero sólido. Considera reducir el monto solicitado.`);
+  if (montoRecomendado > 10000000) recs.push(`Para un monto de ${formatCOP(montoRecomendado)}, necesitas un perfil financiero sólido. Considera reducir el monto solicitado.`);
 
   if (recs.length === 0) recs.push("Mantén tu excelente perfil financiero. Sigue participando activamente en la cooperativa.");
 
@@ -118,7 +119,7 @@ function generarExplicacionPlantilla(riesgo: number, radar: RadarInput, decision
       texto += `Destaca tu ${fortalezas.slice(0, 2).join(", ")}. `;
     }
     if (montoRecomendado < montoSolicitado) {
-      texto += `El monto recomendado es $${montoRecomendado.toLocaleString()} COP, menor al solicitado ($${montoSolicitado.toLocaleString()} COP). `;
+      texto += `El monto recomendado es ${formatCOP(montoRecomendado)} COP, menor al solicitado (${formatCOP(montoSolicitado)} COP). `;
     }
     texto += "Tu solicitud será revisada por el equipo de la cooperativa.";
     return texto;
@@ -153,8 +154,8 @@ DATOS DEL PERFIL:
 - Nombre: ${nombre || "El asociado"}
 - Decisión: ${decision.toUpperCase().replace(/_/g, " ")}
 - Riesgo calculado: ${(riesgo * 100).toFixed(0)}%
-- Monto solicitado: $${montoSolicitado.toLocaleString()} COP
-- Monto recomendado: $${montoRecomendado.toLocaleString()} COP
+- Monto solicitado: ${formatCOP(montoSolicitado)} COP
+- Monto recomendado: ${formatCOP(montoRecomendado)} COP
 
 DIMENSIONES DEL RADAR (0-100, mayor es mejor):
 ${Object.entries(DIMENSIONES).map(([dim, info]) => `- ${info.label}: ${(radar as any)[dim]}/100 (peso: ${(info.peso * 100).toFixed(0)}%)`).join("\n")}

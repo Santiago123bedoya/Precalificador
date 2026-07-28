@@ -15,6 +15,7 @@ import {
   CheckCircle, XCircle, Eye, Search, Filter,
   ArrowUpDown, FileText, Clock, TrendingUp, CheckCheck, Brain,
 } from "lucide-react";
+import { formatCOP, formatNumber } from "@/lib/utils/format";
 
 const MOCK_SOLICITUDES_KEY = "ia-coop-mock-solicitudes";
 
@@ -234,7 +235,7 @@ export default function AdminSolicitudesPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="font-semibold text-gray-900">
-                            ${s.montoSolicitado.toLocaleString()}
+                            {formatCOP(s.montoSolicitado)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -313,11 +314,11 @@ export default function AdminSolicitudesPage() {
                                   </div>
                                   <div className="bg-white rounded-lg p-2 border border-purple-100">
                                     <p className="text-xs text-gray-500">Monto recomendado</p>
-                                    <p className="font-semibold text-sm">${evaluaciones[s.$id].montoRecomendado?.toLocaleString()}</p>
+                                    <p className="font-semibold text-sm">{formatCOP(evaluaciones[s.$id].montoRecomendado ?? 0)}</p>
                                   </div>
                                   <div className="bg-white rounded-lg p-2 border border-purple-100">
                                     <p className="text-xs text-gray-500">Monto solicitado</p>
-                                    <p className="font-semibold text-sm">${s.montoSolicitado.toLocaleString()}</p>
+                                    <p className="font-semibold text-sm">{formatCOP(s.montoSolicitado)}</p>
                                   </div>
                                 </div>
                                 {evaluaciones[s.$id].explicacionResumen && (
@@ -359,7 +360,7 @@ export default function AdminSolicitudesPage() {
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 space-y-1">
                   <p><strong>ID:</strong> #{actionTarget.$id.slice(0, 8)}</p>
-                  <p><strong>Monto solicitado:</strong> ${actionTarget.montoSolicitado.toLocaleString()}</p>
+                  <p><strong>Monto solicitado:</strong> {formatCOP(actionTarget.montoSolicitado)}</p>
                   <p><strong>Plazo:</strong> {actionTarget.plazoMeses} meses</p>
                   <p><strong>Destino:</strong> {actionTarget.destino}</p>
                 </div>

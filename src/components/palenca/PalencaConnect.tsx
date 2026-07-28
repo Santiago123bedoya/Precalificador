@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, AlertCircle, Link2, Unlink, Plus, X } from "lucide-react";
+import { formatCOP } from "@/lib/utils/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { createIngresoDigital, deleteIngresoDigital } from "@/lib/appwrite/db";
@@ -225,7 +226,7 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
             {connectedCount} plataforma{connectedCount > 1 ? "s" : ""} conectada{connectedCount > 1 ? "s" : ""}
           </p>
           <p className="text-xs text-indigo-600 mt-1">
-            Ingreso total estimado: <strong>${totalIncome.toLocaleString()}/mes</strong>
+            Ingreso total estimado: <strong>{formatCOP(totalIncome)}/mes</strong>
           </p>
         </div>
       )}
@@ -252,7 +253,7 @@ export function PalencaConnect({ onConnectionsChange }: PalencaConnectProps) {
                     <p className="text-sm font-medium">{platform.label}</p>
                     {isConnected && conn?.incomeData && (
                       <p className="text-xs text-gray-500">
-                        ${conn.incomeData.promedioMensual.toLocaleString()}/mes · {conn.incomeData.mesesActivo} meses
+                        {formatCOP(conn.incomeData.promedioMensual)}/mes · {conn.incomeData.mesesActivo} meses
                       </p>
                     )}
                   </div>

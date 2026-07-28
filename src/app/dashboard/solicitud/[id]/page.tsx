@@ -21,6 +21,7 @@ import {
   MessageSquare, DollarSign, Brain, Receipt, Link2,
   CheckCircle, XCircle, ArrowLeft, Sparkles,
 } from "lucide-react";
+import { formatCOP, formatNumber } from "@/lib/utils/format";
 
 const FUENTES_LABEL: Record<string, string> = {
   empleado: "Empleado formal", independiente: "Independiente / Freelance",
@@ -247,7 +248,7 @@ export default function SolicitudDetailPage() {
             <Card>
               <CardHeader><CardTitle className="text-base">Información de la Solicitud</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <div><span className="text-gray-400">Monto solicitado</span><p className="font-semibold">${solicitud?.montoSolicitado.toLocaleString()}</p></div>
+                <div><span className="text-gray-400">Monto solicitado</span><p className="font-semibold">{formatCOP(solicitud?.montoSolicitado ?? 0)}</p></div>
                 <div><span className="text-gray-400">Plazo</span><p className="font-semibold">{solicitud?.plazoMeses} meses</p></div>
                 <div><span className="text-gray-400">Destino</span><p className="font-semibold capitalize">{DESTINOS_LABEL[solicitud?.destino || ""] || solicitud?.destino}</p></div>
                 <div><span className="text-gray-400">Fecha</span><p className="font-semibold">{solicitud?.fechaSolicitud ? new Date(solicitud.fechaSolicitud).toLocaleDateString("es-CO") : "-"}</p></div>
@@ -260,13 +261,13 @@ export default function SolicitudDetailPage() {
                 <CardHeader><CardTitle className="text-base">Información del Asociado</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div><span className="text-gray-400">Fuente de ingreso</span><p className="font-semibold">{FUENTES_LABEL[meta.fuenteIngreso] || meta.fuenteIngreso}</p></div>
-                  <div><span className="text-gray-400">Ingreso mensual</span><p className="font-semibold">${meta.ingresoMensual?.toLocaleString()}</p></div>
-                  <div><span className="text-gray-400">Gastos fijos</span><p className="font-semibold">${meta.gastosFijos?.toLocaleString()}</p></div>
+                  <div><span className="text-gray-400">Ingreso mensual</span><p className="font-semibold">{formatCOP(meta.ingresoMensual ?? 0)}</p></div>
+                  <div><span className="text-gray-400">Gastos fijos</span><p className="font-semibold">{formatCOP(meta.gastosFijos ?? 0)}</p></div>
                   <div><span className="text-gray-400">Personas a cargo</span><p className="font-semibold">{meta.personasACargo ?? 0}</p></div>
                   <div><span className="text-gray-400">Tiene deudas</span><p className="font-semibold">{meta.tieneOtrasDeudas ? "Sí" : "No"}</p></div>
-                  {meta.tieneOtrasDeudas && <div><span className="text-gray-400">Monto deudas</span><p className="font-semibold">${meta.montoDeudas?.toLocaleString()}</p></div>}
+                  {meta.tieneOtrasDeudas && <div><span className="text-gray-400">Monto deudas</span><p className="font-semibold">{formatCOP(meta.montoDeudas ?? 0)}</p></div>}
                   <div><span className="text-gray-400">Ahorra mensualmente</span><p className="font-semibold">{meta.ahorraMensualmente ? "Sí" : "No"}</p></div>
-                  {meta.ahorraMensualmente && <div><span className="text-gray-400">Monto ahorro</span><p className="font-semibold">${meta.montoAhorro?.toLocaleString()}</p></div>}
+                  {meta.ahorraMensualmente && <div><span className="text-gray-400">Monto ahorro</span><p className="font-semibold">{formatCOP(meta.montoAhorro ?? 0)}</p></div>}
                   <div><span className="text-gray-400">Antigüedad</span><p className="font-semibold">{meta.antiguedadMeses ?? 0} meses</p></div>
                   <div><span className="text-gray-400">Asambleas asistidas</span><p className="font-semibold">{meta.participacionAsambleas ?? 0}</p></div>
                 </CardContent>
@@ -286,7 +287,7 @@ export default function SolicitudDetailPage() {
                     <div key={i} className="flex items-center justify-between p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
                       <span className="text-sm font-medium capitalize text-indigo-700">{ing.plataforma}</span>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-indigo-700">${ing.promedioMensual?.toLocaleString()}/mes</p>
+                        <p className="text-sm font-semibold text-indigo-700">{formatCOP(ing.promedioMensual ?? 0)}/mes</p>
                         <p className="text-xs text-indigo-400">{ing.mesesActivo} meses activo</p>
                       </div>
                     </div>
@@ -314,7 +315,7 @@ export default function SolicitudDetailPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-emerald-700">${s.montoPagado?.toLocaleString()}</p>
+                        <p className="text-sm font-semibold text-emerald-700">{formatCOP(s.montoPagado ?? 0)}</p>
                         <p className={`text-xs ${s.pagoCompleto ? "text-green-600" : "text-amber-600"}`}>
                           {s.pagoCompleto ? "Pagado completo" : "Pendiente"}
                           {s.fechaPago && ` · ${s.fechaPago}`}
@@ -366,9 +367,9 @@ export default function SolicitudDetailPage() {
                       <DollarSign className="h-4 w-4 text-green-600" />
                       <div>
                         <p className="text-xs text-green-600 font-medium">Monto Aprobado</p>
-                        <p className="text-lg font-bold text-green-700">${(solicitud as any).montoAprobado.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-green-700">{formatCOP((solicitud as any).montoAprobado ?? 0)}</p>
                         {(solicitud as any).montoAprobado < solicitud.montoSolicitado && (
-                          <p className="text-xs text-amber-600">(Solicitó ${solicitud.montoSolicitado.toLocaleString()})</p>
+                          <p className="text-xs text-amber-600">(Solicitó ${formatNumber(solicitud.montoSolicitado)})</p>
                         )}
                       </div>
                     </div>
@@ -515,7 +516,7 @@ export default function SolicitudDetailPage() {
           {solicitud && (
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 space-y-1">
-                <p><strong>Monto solicitado:</strong> ${solicitud.montoSolicitado.toLocaleString()}</p>
+                <p><strong>Monto solicitado:</strong> ${formatNumber(solicitud.montoSolicitado)}</p>
                 <p><strong>Plazo:</strong> {solicitud.plazoMeses} meses</p>
                 <p><strong>Destino:</strong> {DESTINOS_LABEL[solicitud.destino] || solicitud.destino}</p>
               </div>

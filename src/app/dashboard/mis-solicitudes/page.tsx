@@ -15,6 +15,7 @@ import {
   Eye, ArrowLeft, Clock, TrendingUp, CheckCircle2,
   XCircle, FileText, MessageSquare, DollarSign, Award,
 } from "lucide-react";
+import { formatCOP, formatNumber } from "@/lib/utils/format";
 
 const MOCK_SOLICITUDES_KEY = "ia-coop-mock-solicitudes";
 const MOCK_EVALUACIONES_KEY = "ia-coop-mock-evaluaciones";
@@ -140,7 +141,7 @@ export default function MisSolicitudesPage() {
                   </span>
                 </div>
                 <div className="flex justify-between"><span className="text-gray-500">Monto solicitado</span>
-                  <span className="font-semibold">${selectedSolicitud.montoSolicitado.toLocaleString()}</span>
+                  <span className="font-semibold">{formatCOP(selectedSolicitud.montoSolicitado)}</span>
                 </div>
                 <div className="flex justify-between"><span className="text-gray-500">Plazo</span>
                   <span>{selectedSolicitud.plazoMeses} meses</span>
@@ -170,7 +171,7 @@ export default function MisSolicitudesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Monto recomendado IA</span>
-                    <span className="font-semibold">${evaluacion.montoRecomendado?.toLocaleString()}</span>
+                    <span className="font-semibold">{formatCOP(evaluacion.montoRecomendado ?? 0)}</span>
                   </div>
                   {evaluacion.explicacionResumen && (
                     <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -203,9 +204,9 @@ export default function MisSolicitudesPage() {
                       <DollarSign className="h-4 w-4 text-green-600" />
                       <div>
                         <p className="text-xs text-green-600 font-medium">Monto Aprobado</p>
-                        <p className="text-lg font-bold text-green-700">${(selectedSolicitud as any).montoAprobado.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-green-700">{formatCOP((selectedSolicitud as any).montoAprobado ?? 0)}</p>
                         {(selectedSolicitud as any).montoAprobado < selectedSolicitud.montoSolicitado && (
-                          <p className="text-xs text-amber-600">(Solicitó ${selectedSolicitud.montoSolicitado.toLocaleString()})</p>
+                          <p className="text-xs text-amber-600">(Solicitó ${formatNumber(selectedSolicitud.montoSolicitado)})</p>
                         )}
                       </div>
                     </div>
@@ -306,7 +307,7 @@ export default function MisSolicitudesPage() {
                   return (
                     <tr key={s.$id} className={`border-b last:border-0 hover:bg-indigo-50/30 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}>
                       <td className="px-4 py-3 font-mono text-xs text-gray-400">#{s.$id.slice(0, 6)}</td>
-                      <td className="px-4 py-3 font-semibold">${s.montoSolicitado.toLocaleString()}</td>
+                      <td className="px-4 py-3 font-semibold">${formatNumber(s.montoSolicitado)}</td>
                       <td className="px-4 py-3">{s.plazoMeses} meses</td>
                       <td className="px-4 py-3 capitalize">{s.destino}</td>
                       <td className="px-4 py-3">

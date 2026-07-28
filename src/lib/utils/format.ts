@@ -1,5 +1,11 @@
 // src/lib/utils/format.ts
 
+const numberFmt = new Intl.NumberFormat("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+export function formatNumber(amount: number): string {
+  return numberFmt.format(amount);
+}
+
 export function formatCOP(amount: number): string {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",

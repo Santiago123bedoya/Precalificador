@@ -35,6 +35,7 @@ import { PalencaConnect } from "@/components/palenca/PalencaConnect";
 import { RadarChart } from "@/components/radar/RadarChart";
 import { calcularPerfilExito } from "@/lib/mock-evaluate";
 import { CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Link2, Shield, Receipt, X } from "lucide-react";
+import { formatCOP } from "@/lib/utils/format";
 
 // ============================================
 // ESQUEMA DE VALIDACIÓN CON ZOD
@@ -263,13 +264,13 @@ export default function SolicitudForm() {
       const gastosNum = parseFloat(data.gastosFijos);
 
       if (montoNum < 100000) {
-        setError("El monto mínimo es $100,000");
+        setError("El monto mínimo es $ 100.000");
         setIsSubmitting(false);
         return;
       }
 
       if (ingresoNum < 100000) {
-        setError("El ingreso mensual mínimo es $100,000");
+        setError("El ingreso mensual mínimo es $ 100.000");
         setIsSubmitting(false);
         return;
       }
@@ -619,7 +620,7 @@ export default function SolicitudForm() {
                       <Input
                         id="monto"
                         type="number"
-                        placeholder="5,000,000"
+                        placeholder="5.000.000"
                         className="pl-7"
                         {...register("monto")}
                       />
@@ -627,7 +628,7 @@ export default function SolicitudForm() {
                     {errors.monto && (
                       <p className="text-sm text-red-500 mt-1">{errors.monto.message}</p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">Monto mínimo: $100,000</p>
+                    <p className="text-xs text-gray-400 mt-1">Monto mínimo: $ 100.000</p>
                   </div>
 
                   {/* Plazo */}
@@ -734,7 +735,7 @@ export default function SolicitudForm() {
                       <Input
                         id="ingresoMensual"
                         type="number"
-                        placeholder="2,000,000"
+                        placeholder="2.000.000"
                         className="pl-7"
                         {...register("ingresoMensual")}
                       />
@@ -754,7 +755,7 @@ export default function SolicitudForm() {
                       <Input
                         id="gastosFijos"
                         type="number"
-                        placeholder="1,200,000"
+                        placeholder="1.200.000"
                         className="pl-7"
                         {...register("gastosFijos")}
                       />
@@ -818,7 +819,7 @@ export default function SolicitudForm() {
                               <Input
                                 id="montoDeudas"
                                 type="number"
-                                placeholder="500,000"
+                                placeholder="500.000"
                                 className="pl-7"
                                 {...register("montoDeudas")}
                               />
@@ -869,7 +870,7 @@ export default function SolicitudForm() {
                               <Input
                                 id="montoAhorro"
                                 type="number"
-                                placeholder="200,000"
+                                placeholder="200.000"
                                 className="pl-7"
                                 {...register("montoAhorro")}
                               />
@@ -950,7 +951,7 @@ export default function SolicitudForm() {
                                 {(() => { const t = s.tipo; if (t === "agua") return "💧"; if (t === "luz") return "💡"; if (t === "gas") return "🔥"; if (t === "internet") return "🌐"; if (t === "telefono") return "📞"; return "📋"; })()}
                               </span>
                               <div>
-                                <p className="font-medium text-indigo-700 text-xs">{s.contrato} · ${s.montoPagado?.toLocaleString()}</p>
+                                <p className="font-medium text-indigo-700 text-xs">{s.contrato} · {s.montoPagado != null ? formatCOP(s.montoPagado) : '$ 0'}</p>
                                 <p className="text-[11px] text-indigo-400">{s.mesFactura}</p>
                               </div>
                             </div>
@@ -995,7 +996,7 @@ export default function SolicitudForm() {
                         .filter((c) => c.status === "connected" && c.incomeData)
                         .map((c) => (
                           <p key={c.platformId} className="text-xs text-indigo-600">
-                            {c.platformId}: ${c.incomeData.promedioMensual.toLocaleString()}/mes
+                            {c.platformId}: {formatCOP(c.incomeData.promedioMensual)}/mes
                           </p>
                         ))}
                     </div>
@@ -1119,7 +1120,7 @@ export default function SolicitudForm() {
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-semibold text-sm text-gray-900">${s.montoPagado?.toLocaleString()}</p>
+                          <p className="font-semibold text-sm text-gray-900">{s.montoPagado != null ? formatCOP(s.montoPagado) : '$ 0'}</p>
                           <p className={`text-[11px] ${s.pagoCompleto ? "text-green-600" : "text-amber-600"}`}>
                             {s.pagoCompleto ? "Pagado" : "Pendiente"}
                           </p>

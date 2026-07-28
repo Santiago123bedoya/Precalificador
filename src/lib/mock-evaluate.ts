@@ -1,3 +1,5 @@
+import { formatCOP } from "@/lib/utils/format";
+
 export interface RadarInput {
   consistenciaIngresos: number;
   responsabilidadPagos: number;
@@ -110,7 +112,7 @@ export function evaluateRadar(input: RadarInput, montoSolicitado: number): Evalu
       explicacionResumen += `Para mejorar aún más, considera que ${weakTexts.join(" y ")}. `;
     }
     if (decision === "precalificado") {
-      explicacionResumen += `Por ello, te precalificamos por un monto de $${montoRecomendado.toLocaleString()}.`;
+      explicacionResumen += `Por ello, te precalificamos por un monto de ${formatCOP(montoRecomendado)}.`;
     } else {
       explicacionResumen += `Tu solicitud ha sido aprobada por el monto solicitado.`;
     }

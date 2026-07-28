@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Lightbulb, TrendingUp, Target } from "lucide-react";
+import { formatCOP } from "@/lib/utils/format";
 
 interface ExplanationProps {
   decision: "precalificado" | "no_precalificado" | "aprobado" | "rechazado" | string;
@@ -65,7 +66,7 @@ export function Explanation({
                 <div>
                   <p className="font-semibold text-blue-800 text-sm">Monto precalificado</p>
                   <p className="text-2xl font-bold text-blue-700 mt-1">
-                  ${montoRecomendado.toLocaleString()}
+                  {formatCOP(montoRecomendado)}
                   </p>
                   <p className="text-sm text-blue-600 mt-1">
                     Este es el monto estimado para el cual calificas según tu perfil actual.

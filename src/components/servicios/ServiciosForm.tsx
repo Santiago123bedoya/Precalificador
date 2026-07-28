@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash2, Plus, Receipt, CheckCircle2 } from "lucide-react";
+import { formatCOP } from "@/lib/utils/format";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { createServicio, getServiciosByUser, deleteServicio } from "@/lib/appwrite/db";
 import type { ServicioPublico } from "@/lib/types";
@@ -158,7 +159,7 @@ export function ServiciosForm() {
                         </div>
                         <div>
                           <span className="text-gray-400">Monto pagado</span>
-                          <p className="font-medium text-gray-700">${s.montoPagado.toLocaleString()}</p>
+                          <p className="font-medium text-gray-700">{formatCOP(s.montoPagado)}</p>
                         </div>
                         <div>
                           <span className="text-gray-400">Pagó completo</span>
@@ -249,7 +250,7 @@ export function ServiciosForm() {
                     const raw = e.target.value.replace(/[^0-9]/g, "");
                     setMontoPagado(raw);
                   }}
-                  placeholder="Ej: 150,000"
+                  placeholder="Ej: 150.000"
                   className="mt-1"
                 />
               </div>

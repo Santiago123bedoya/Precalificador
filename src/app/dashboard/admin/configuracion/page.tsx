@@ -12,6 +12,7 @@ import {
   Save, Shield, Bell, Cpu, Database, Users,
   AlertTriangle, CheckCircle2, Settings,
 } from "lucide-react";
+import { formatCOP } from "@/lib/utils/format";
 
 interface ConfigData {
   nombreCooperativa: string;
@@ -203,7 +204,7 @@ export default function AdminConfiguracionPage() {
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Actual: ${config.maxMontoSolicitud.toLocaleString()} COP
+                  Actual: {formatCOP(config.maxMontoSolicitud)} COP
                 </p>
               </div>
               <div>

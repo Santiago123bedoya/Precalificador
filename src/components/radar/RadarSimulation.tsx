@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RadarChart } from "./RadarChart";
 import { RADAR_LABELS } from "@/lib/utils/constants";
+import { formatCOP } from "@/lib/utils/format";
 
 interface RadarData {
   consistenciaIngresos: number;
@@ -133,7 +134,7 @@ export function RadarSimulation({ currentData, onSimulate }: RadarSimulationProp
               </div>
               <div className="bg-white rounded-lg p-3">
                 <span className="text-gray-500">Monto recomendado</span>
-                <p className="text-xl font-bold">${result.montoRecomendado.toLocaleString()}</p>
+                <p className="text-xl font-bold">{formatCOP(result.montoRecomendado)}</p>
               </div>
             </div>
 
