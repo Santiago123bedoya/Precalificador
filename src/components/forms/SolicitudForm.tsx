@@ -433,8 +433,15 @@ export default function SolicitudForm() {
           evals.push({ $id: `mock-eval-${Date.now()}`, ...evaluacionData });
           localStorage.setItem("ia-coop-mock-evaluaciones", JSON.stringify(evals));
         } else {
-          const { createEvaluacion, updateSolicitud } = await import("@/lib/appwrite/db");
-          await createEvaluacion(evaluacionData as any);
+          const saveRes = await fetch("/api/evaluaciones", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(evaluacionData),
+          });
+          if (!saveRes.ok) {
+            const errData = await saveRes.json();
+            console.error("Error guardando evaluación:", errData.error);
+          }
         }
       } catch (evalErr) {
         console.warn("Evaluacion no disponible:", evalErr);

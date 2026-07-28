@@ -482,6 +482,14 @@ export default function SolicitudDetailPage() {
                 />
               </CardContent>
             </Card>
+            ) : realHook.error ? (
+              <Card className="border-red-100">
+                <CardContent className="py-8 text-center">
+                  <XCircle className="h-10 w-10 text-red-300 mx-auto mb-3" />
+                  <p className="text-sm text-red-600 font-medium">Error al cargar la evaluación</p>
+                  <p className="text-xs text-red-400 mt-1 font-mono">{realHook.error}</p>
+                </CardContent>
+              </Card>
             ) : (
               <Card>
                 <CardContent className="py-8 text-center">
