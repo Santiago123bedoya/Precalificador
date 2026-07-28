@@ -185,6 +185,12 @@ export async function getEvaluacionBySolicitud(solicitudId: string): Promise<Eva
   if (typeof doc.recomendaciones === "string") {
     try { doc.recomendaciones = JSON.parse(doc.recomendaciones); } catch { doc.recomendaciones = []; }
   }
+  if (typeof doc.fortalezas === "string") {
+    try { doc.fortalezas = JSON.parse(doc.fortalezas); } catch { doc.fortalezas = []; }
+  }
+  if (typeof doc.radarIdeal === "string") {
+    try { doc.radarIdeal = JSON.parse(doc.radarIdeal); } catch { doc.radarIdeal = {}; }
+  }
   return doc as Evaluacion;
 }
 
@@ -198,6 +204,12 @@ export async function getEvaluacion(id: string): Promise<Evaluacion> {
   const doc = await databases.getDocument(DB.id, DB.collections.EVALUACIONES, id) as any;
   if (typeof doc.recomendaciones === "string") {
     try { doc.recomendaciones = JSON.parse(doc.recomendaciones); } catch { doc.recomendaciones = []; }
+  }
+  if (typeof doc.fortalezas === "string") {
+    try { doc.fortalezas = JSON.parse(doc.fortalezas); } catch { doc.fortalezas = []; }
+  }
+  if (typeof doc.radarIdeal === "string") {
+    try { doc.radarIdeal = JSON.parse(doc.radarIdeal); } catch { doc.radarIdeal = {}; }
   }
   return doc as Evaluacion;
 }
@@ -219,9 +231,19 @@ export async function createEvaluacion(data: Omit<Evaluacion, "$id">): Promise<E
     DB.collections.EVALUACIONES,
     "unique()",
     {
-      ...data,
-      recomendaciones: JSON.stringify(data.recomendaciones || []),
+      solicitudId: data.solicitudId,
+      asociadoId: data.asociadoId,
       fechaEvaluacion: new Date().toISOString(),
+      puntajeRiesgo: data.puntajeRiesgo,
+      consistenciaIngresos: data.consistenciaIngresos,
+      responsabilidadPagos: data.responsabilidadPagos,
+      compromisoCooperativo: data.compromisoCooperativo,
+      perfilEndeudamiento: data.perfilEndeudamiento,
+      capacidadAhorro: data.capacidadAhorro,
+      decision: data.decision,
+      explicacionResumen: data.explicacionResumen,
+      montoRecomendado: data.montoRecomendado ?? 0,
+      recomendaciones: JSON.stringify(data.recomendaciones || []),
     }
   ) as unknown as Promise<Evaluacion>;
 }
