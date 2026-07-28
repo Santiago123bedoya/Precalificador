@@ -18,10 +18,17 @@ export async function GET(request: NextRequest) {
     if (!sid) {
       return NextResponse.json({ success: false, error: "solicitudId required" }, { status: 400 });
     }
-    const res = await fetch(`${BASE}?queries[]=equal("solicitudId","${encodeURIComponent(sid)}")`, { headers: H });
+    const res = await fetch(
+      `${BASE}?queries%5B0%5D=equal%28%22solicitudId%22%2C%22${encodeURIComponent(sid)}%22%29`,
+      { headers: H }
+    );
     if (!res.ok) {
-      const errText = await res.text();
-      return NextResponse.json({ success: false, error: errText }, { status: res.status });
+      // Fallback: list all and filter
+      const allRes = await fetch(BASE, { headers: H });
+      const allData = await allRes.json();
+      const allDocs = allData.documents || [];
+      const filtered = allDocs.filter((d: any) => d.solicitudId === sid);
+      return NextResponse.json({ success: true, documents: filtered });
     }
     const data = await res.json();
     const docs = data.documents || [];
