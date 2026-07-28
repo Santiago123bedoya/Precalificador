@@ -170,18 +170,10 @@ export async function getEvaluacionBySolicitud(solicitudId: string): Promise<Eva
     const list = getMockList<Evaluacion>(MOCK_EVALUACIONES_KEY);
     return list.find((e) => e.solicitudId === solicitudId) || null;
   }
-  let result: any;
-  for (let i = 0; i < 5; i++) {
-    result = await databases.listDocuments(
-      DB.id,
-      DB.collections.EVALUACIONES,
-      [Query.equal("solicitudId", solicitudId)]
-    );
-    if (result.documents.length > 0) break;
-    if (i < 4) await new Promise((r) => setTimeout(r, 400));
-  }
-  if (!result || result.documents.length === 0) return null;
-  const doc = result.documents[result.documents.length - 1] as any;
+  const res = await fetch(`/api/evaluaciones?solicitudId=${encodeURIComponent(solicitudId)}`);
+  const json = await res.json();
+  if (!json.success || !json.documents?.length) return null;
+  const doc = json.documents[0] as any;
   if (typeof doc.recomendaciones === "string") {
     try { doc.recomendaciones = JSON.parse(doc.recomendaciones); } catch { doc.recomendaciones = []; }
   }

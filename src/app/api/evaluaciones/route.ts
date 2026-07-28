@@ -5,18 +5,39 @@ const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
+const BASE = `${ENDPOINT}/databases/${DATABASE_ID}/collections/evaluaciones/documents`;
+const H = {
+  "Content-Type": "application/json",
+  "X-Appwrite-Key": API_KEY!,
+  "X-Appwrite-Project": PROJECT_ID!,
+};
+
+export async function GET(request: NextRequest) {
+  try {
+    const sid = request.nextUrl.searchParams.get("solicitudId");
+    if (!sid) {
+      return NextResponse.json({ success: false, error: "solicitudId required" }, { status: 400 });
+    }
+    const res = await fetch(`${BASE}?queries[]=equal("solicitudId","${encodeURIComponent(sid)}")`, { headers: H });
+    if (!res.ok) {
+      const errText = await res.text();
+      return NextResponse.json({ success: false, error: errText }, { status: res.status });
+    }
+    const data = await res.json();
+    const docs = data.documents || [];
+    return NextResponse.json({ success: true, documents: docs });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error?.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const url = `${ENDPOINT}/databases/${DATABASE_ID}/collections/evaluaciones/documents`;
-    const res = await fetch(url, {
+    const res = await fetch(BASE, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Appwrite-Key": API_KEY!,
-        "X-Appwrite-Project": PROJECT_ID!,
-      },
+      headers: H,
       body: JSON.stringify({
         documentId: "unique()",
         data: {
