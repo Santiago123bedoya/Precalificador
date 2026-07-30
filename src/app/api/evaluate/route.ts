@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
             perfilEndeudamiento: Math.round(radarData.perfilEndeudamiento),
             capacidadAhorro: Math.round(radarData.capacidadAhorro),
             decision,
-            explicacionResumen: explicacion,
+            explicacionResumen: explicacion.substring(0, 500),
             montoRecomendado,
             recomendaciones: JSON.stringify(recomendaciones || []),
           },
