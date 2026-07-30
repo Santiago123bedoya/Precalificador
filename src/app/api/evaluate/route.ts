@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       evaluacionId,
-      _debug: { envOk, hasSid: !!solicitudId, hasAid: !!asociadoId, saveError,
+      _debug: { envOk, hasSid: !!solicitudId, hasAid: !!asociadoId, saveError },
       data: {
         decision,
         puntaje_riesgo: Math.round(riesgo * 10000) / 10000,
