@@ -245,6 +245,7 @@ export async function POST(request: NextRequest) {
 
     // Guardar evaluacion directamente en Appwrite (server-side, con API key)
     let evaluacionId: string | null = null;
+    let saveError: string | null = null;
     const envOk = !!(APPWRITE_ENDPOINT && APPWRITE_PROJECT && APPWRITE_KEY && DATABASE_ID);
     if (solicitudId && asociadoId && envOk) {
       try {
@@ -280,9 +281,11 @@ export async function POST(request: NextRequest) {
           const saved = await saveRes.json();
           evaluacionId = saved.$id;
         } else {
-          console.error("Error guardando evaluación en Appwrite:", saveRes.status, await saveRes.text());
+          saveError = `${saveRes.status}: ${await saveRes.text()}`;
+          console.error("Error guardando evaluación en Appwrite:", saveError);
         }
       } catch (e) {
+        saveError = (e as Error).message;
         console.error("Error guardando evaluación:", e);
       }
     }
@@ -290,7 +293,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       evaluacionId,
-      _debug: { envOk, hasSid: !!solicitudId, hasAid: !!asociadoId },
+      _debug: { envOk, hasSid: !!solicitudId, hasAid: !!asociadoId, saveError,
       data: {
         decision,
         puntaje_riesgo: Math.round(riesgo * 10000) / 10000,
