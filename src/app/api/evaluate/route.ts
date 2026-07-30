@@ -245,7 +245,8 @@ export async function POST(request: NextRequest) {
 
     // Guardar evaluacion directamente en Appwrite (server-side, con API key)
     let evaluacionId: string | null = null;
-    if (solicitudId && asociadoId && APPWRITE_ENDPOINT && APPWRITE_PROJECT && APPWRITE_KEY && DATABASE_ID) {
+    const envOk = !!(APPWRITE_ENDPOINT && APPWRITE_PROJECT && APPWRITE_KEY && DATABASE_ID);
+    if (solicitudId && asociadoId && envOk) {
       try {
         const saveUrl = `${APPWRITE_ENDPOINT}/databases/${DATABASE_ID}/collections/evaluaciones/documents`;
         const saveBody = {
@@ -289,6 +290,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       evaluacionId,
+      _debug: { envOk, hasSid: !!solicitudId, hasAid: !!asociadoId },
       data: {
         decision,
         puntaje_riesgo: Math.round(riesgo * 10000) / 10000,
