@@ -365,6 +365,8 @@ export default function SolicitudForm() {
             monto_solicitado: montoNum,
             plazo_meses: parseInt(data.plazo),
             nombre: user.nombre,
+            solicitudId: solicitud.$id,
+            asociadoId: user.$id,
           }),
         });
 
@@ -431,26 +433,8 @@ export default function SolicitudForm() {
         setError("Error al evaluar el perfil. Intenta de nuevo.");
       }
 
-      // Guardar evaluacion SIEMPRE (fuera del try-catch de evaluate)
-      if (evaluacionData && !USE_MOCK) {
-        try {
-          const saveRes = await fetch("/api/evaluaciones", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(evaluacionData),
-          });
-          if (!saveRes.ok) {
-            const errData = await saveRes.json().catch(() => ({ error: "Respuesta inválida del servidor" }));
-            console.error("Error guardando evaluación:", errData.error);
-            setError("Error al guardar la evaluación: " + (errData.error || "Error desconocido"));
-          } else {
-            console.log("Evaluación guardada correctamente");
-          }
-        } catch (saveErr: any) {
-          console.error("Error guardando evaluación:", saveErr?.message || saveErr);
-          setError("Error al guardar la evaluación: " + (saveErr?.message || "Error desconocido"));
-        }
-      } else if (evaluacionData && USE_MOCK) {
+      // En modo mock, guardar en localStorage
+      if (evaluacionData && USE_MOCK) {
         const stored = localStorage.getItem("ia-coop-mock-evaluaciones");
         const evals: any[] = stored ? JSON.parse(stored) : [];
         evals.push({ $id: `mock-eval-${Date.now()}`, ...evaluacionData });

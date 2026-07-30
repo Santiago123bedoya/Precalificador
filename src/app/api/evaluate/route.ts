@@ -5,6 +5,11 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1/chat/completions";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-chat";
 
+const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+const APPWRITE_PROJECT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+const APPWRITE_KEY = process.env.APPWRITE_API_KEY;
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+
 const DIMENSIONES: Record<string, { label: string; peso: number }> = {
   consistenciaIngresos: { label: "Consistencia de Ingresos", peso: 0.25 },
   responsabilidadPagos: { label: "Responsabilidad en Pagos", peso: 0.30 },
@@ -206,7 +211,7 @@ RESPUESTA (solo el texto de explicación, sin encabezados):`;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { radar, monto_solicitado, plazo_meses, nombre } = body;
+    const { radar, monto_solicitado, plazo_meses, nombre, solicitudId, asociadoId } = body;
 
     if (!radar) {
       return NextResponse.json({ success: false, error: "Datos del radar requeridos" }, { status: 400 });
@@ -238,8 +243,52 @@ export async function POST(request: NextRequest) {
     else if (riesgo < 0.75) factorTexto = "Riesgo moderado-alto";
     else factorTexto = "Riesgo alto";
 
+    // Guardar evaluacion directamente en Appwrite (server-side, con API key)
+    let evaluacionId: string | null = null;
+    if (solicitudId && asociadoId && APPWRITE_ENDPOINT && APPWRITE_PROJECT && APPWRITE_KEY && DATABASE_ID) {
+      try {
+        const saveUrl = `${APPWRITE_ENDPOINT}/databases/${DATABASE_ID}/collections/evaluaciones/documents`;
+        const saveBody = {
+          documentId: "unique()",
+          data: {
+            solicitudId,
+            asociadoId,
+            fechaEvaluacion: new Date().toISOString(),
+            puntajeRiesgo: Math.round(riesgo * 100),
+            consistenciaIngresos: Math.round(radarData.consistenciaIngresos),
+            responsabilidadPagos: Math.round(radarData.responsabilidadPagos),
+            compromisoCooperativo: Math.round(radarData.compromisoCooperativo),
+            perfilEndeudamiento: Math.round(radarData.perfilEndeudamiento),
+            capacidadAhorro: Math.round(radarData.capacidadAhorro),
+            decision,
+            explicacionResumen: explicacion,
+            montoRecomendado,
+            recomendaciones: JSON.stringify(recomendaciones || []),
+          },
+        };
+        const saveRes = await fetch(saveUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Appwrite-Key": APPWRITE_KEY,
+            "X-Appwrite-Project": APPWRITE_PROJECT,
+          },
+          body: JSON.stringify(saveBody),
+        });
+        if (saveRes.ok) {
+          const saved = await saveRes.json();
+          evaluacionId = saved.$id;
+        } else {
+          console.error("Error guardando evaluación en Appwrite:", saveRes.status, await saveRes.text());
+        }
+      } catch (e) {
+        console.error("Error guardando evaluación:", e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
+      evaluacionId,
       data: {
         decision,
         puntaje_riesgo: Math.round(riesgo * 10000) / 10000,
